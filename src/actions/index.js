@@ -1,9 +1,11 @@
 import moment from 'moment';
 
-import firebase, { firebaseRef } from 'src/firebase/';
+import firebase, { firebaseRef, provider } from 'src/firebase/';
 import {
 	ADD_TODO,
 	ADD_TODOS,
+	LOGIN,
+	LOGOUT,
 	SET_SEARCH_TEXT,
 	TOGGLE_SHOW_COMPLETED,
 	UPDATE_TODO
@@ -38,7 +40,8 @@ export const startAddTodo = (text) => {
 			completedAt: null
 		};
 
-		let todoRef = firebaseRef.child('todos').push(todo);
+		let uid = getState().auth.uid;
+		let todoRef = firebaseRef.child(`users/${uid}/todos`).push(todo);
 
 		return todoRef.then(() => {
 			dispatch(addTodo({
@@ -51,7 +54,8 @@ export const startAddTodo = (text) => {
 
 export const startAddTodos = () => {
 	return (dispatch, getState) => {
-		let todosRef = firebaseRef.child('todos');
+		let uid = getState().auth.uid;
+		let todosRef = firebaseRef.child(`users/${uid}/todos`);
 
 		return todosRef.once('value')
 			.then((snapshot) => {
@@ -64,7 +68,6 @@ export const startAddTodos = () => {
 						...todos[todoId]
 					});
 				});
-
 				dispatch(addTodos(parsedTodos));
 			})
 			.catch(e => console.log(e));		
@@ -90,7 +93,8 @@ export const updateTodo = (id, updates) => {
 
 export const startToggleTodo = (id, completed) => {
 	return (dispatch, getState) => {
-		let todoRef = firebaseRef.child(`todos/${id}`);
+		let uid = getState().auth.uid;
+		let todoRef = firebaseRef.child(`users/${uid}/todos/${id}`);
 		let updates = {
 			completed,
 			completedAt: completed ? moment().unix() : null
@@ -100,5 +104,45 @@ export const startToggleTodo = (id, completed) => {
 			.then(() => {
 				dispatch(updateTodo(id, updates));
 			});	
+	};
+};
+
+export const login = (uid) => {
+	return {
+		type: LOGIN,
+		data: uid
+	};
+};
+
+export const startLogin = () => {
+	return (dispatch, getState) => {
+		return firebase.auth().signInWithPopup(provider)
+			.then((result) => {
+				//let { uid } = result.user;
+				//dispatch(login(uid));
+				console.log('Auth worked!', result);
+			})
+			.catch((error) => {
+				console.log('Unable to auth', error.message);
+			});
+	};
+};
+
+export const logout = () => {
+	return {
+		type: LOGOUT
+	};
+};
+
+export const startLogout = () => {
+	return (dispatch, getState) => {
+		return firebase.auth().signOut()
+			.then(() => {
+				console.log('Logout!');
+				//dispatch(logout());
+			})
+			.catch(() => {
+
+			});
 	};
 };

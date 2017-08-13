@@ -1,17 +1,25 @@
 import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
-import { Route, Router, IndexRoute, hashHistory } from 'react-router';
+import { hashHistory } from 'react-router';
 
-import TodoApp from 'TodoApp';
-
+import router from 'src/router/';
 import * as actions from 'actions';
 import { configure } from 'configureStore';
-import * as TodoAPI from 'TodoAPI';
+import firebase from 'src/firebase/';
 
 const store = configure();
 
-store.dispatch(actions.startAddTodos());
+firebase.auth().onAuthStateChanged((user) => {
+	if (user) {
+		store.dispatch(actions.login(user.uid));
+		store.dispatch(actions.startAddTodos());
+		hashHistory.push('/todos');
+	} else {
+		store.dispatch(actions.logout());
+		hashHistory.push('/');
+	}
+});
 
 // Load foundation
 import 'foundation-sites/dist/css/foundation-float.min.css';
@@ -22,7 +30,7 @@ import 'applicationStyles';
 
 render(
 	<Provider store={store}>
-		<TodoApp/>
+		{router}
 	</Provider>,
 	document.getElementById('app')
 );

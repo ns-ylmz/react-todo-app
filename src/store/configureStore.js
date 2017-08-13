@@ -7,7 +7,8 @@ export const configure = (initialState = {}) => {
 	const reducer = redux.combineReducers({
 		searchText: reducers.searchTextReducer,
 		showCompleted: reducers.showCompletedReducer,
-		todos: reducers.todosReducer
+		todos: reducers.todosReducer,
+		auth: reducers.authReducer
 	});
 
 	const store = redux.createStore(reducer, initialState,
